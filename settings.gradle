@@ -1,0 +1,2 @@
+rootProject.name='Anime Character Screen Overlay'
+include ':app'
