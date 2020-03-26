@@ -1,15 +1,29 @@
 package com.AXCDevelopment.AnimeCharacterScreenOverlay;
 
-public class AnimeCharacter {
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+public class AnimeCharacter{
 
     // name of the character
     private String name;
     // character tags, i.e. anime, gender
     private String[] tags;
-    // location of images
-    private String[][] imageLocation;
+    // location of image when stationary
+    private int imageStatLocation;
+    // location of image when moving
+    private int imageMoveLocation;
     // location of audio
-    private String[][] audioLocation;
+    private int audioLocation;
+
+    public AnimeCharacter(String name, String[] tags, int imageStatLocation, int imageMoveLocation, int audioLocation) {
+        this.name = name;
+        this.tags = tags;
+        this.imageStatLocation = imageStatLocation;
+        this.imageMoveLocation = imageMoveLocation;
+        this.audioLocation = audioLocation;
+    }
 
     public String getName() {
         return name;
@@ -27,20 +41,35 @@ public class AnimeCharacter {
         this.tags = tags;
     }
 
-    public String[][] getImageLocation() {
-        return imageLocation;
+    public Bitmap getImageStat() {
+        return BitmapFactory.decodeResource(Resources.getSystem(), imageStatLocation);
     }
 
-    public void setImageLocation(String[][] imageLocation) {
-        this.imageLocation = imageLocation;
+    public void setImageStatLocation(int imageStatLocation) {
+        this.imageStatLocation = imageStatLocation;
     }
 
-    public String[][] getAudioLocation() {
+    public int getImageStatLocation() {
+        return imageStatLocation;
+    }
+
+    public int getImageMoveLocation() {
+        return imageMoveLocation;
+    }
+
+    public Bitmap getImageMove() {
+        return BitmapFactory.decodeResource(Resources.getSystem(), imageMoveLocation);
+    }
+
+    public void setImageMoveLocation(int imageMoveLocation) {
+        this.imageMoveLocation = imageMoveLocation;
+    }
+
+    public int getAudioLocation() {
         return audioLocation;
     }
 
-    public void setAudioLocation(String[][] audioLocation) {
+    public void setAudioLocation(int audioLocation) {
         this.audioLocation = audioLocation;
     }
-
 }
