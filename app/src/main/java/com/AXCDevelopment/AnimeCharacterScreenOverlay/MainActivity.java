@@ -40,11 +40,24 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Cache;
+import com.android.volley.Network;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.BasicNetwork;
+import com.android.volley.toolbox.DiskBasedCache;
+import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,10 +77,15 @@ public class MainActivity extends AppCompatActivity {
     private int size;
     private static final AnimeCharacter[] ANIME_CHARACTERS = new AnimeCharacter[]
             {new AnimeCharacter("Zero Two",
-                    new String[]{"Darling in the Franxx", "Female"},
-                    R.drawable.zerotwo,
-                    R.drawable.zerotwo,
-                    R.raw.darling)
+                        new String[]{"Darling in the Franxx", "Female"},
+                        R.drawable.zerotwo,
+                        R.drawable.zerotwo,
+                        R.raw.darling),
+                    new AnimeCharacter("Nezuko",
+                            new String[]{"Demon Slayer", "Female"},
+                            R.drawable.nezuko,
+                            R.drawable.nezuko,
+                            R.raw.nezuko_sound)
             };
 
     @Override
@@ -75,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        version = getString(R.string.version);
+        version = getString(R.string.version).substring(1);
 
         context = this;
         mediaPlayer = new MediaPlayer();
@@ -170,29 +188,39 @@ public class MainActivity extends AppCompatActivity {
         windowManager.addView(overlayPowerBtn, params);
     }
 
+    String versionLine;
+
     private void setUpTextView() {
         updateTextView = findViewById(R.id.update);
-        updateTextView.setText("V" + version);
-        String versionLine = "";
-        try {
-            URL url = new URL("https://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml");
-            // read text returned by server
-            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-            String line;
-            while ((line = in.readLine()) != null) {
-                if (line.contains("version")) {
-                    versionLine = line;
-                    break;
-                }
-            }
-            in.close();
-        }
-        catch (MalformedURLException e) {
-            Log.v("Malformed URL: ", e.getMessage());
-        }
-        catch (IOException e) {
-            Log.v("I/O Error: ", e.getMessage());
-        }
+        versionLine = "";
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        String url ="http://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml";
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // read text returned by server
+                        Scanner in = new Scanner(response);
+                        String line;
+                        while ((line = in.nextLine()) != null) {
+                            if (line.contains("version")) {
+                                versionLine = line;
+                                break;
+                            }
+                        }
+                        in.close();
+                        Log.v("USERInfo", versionLine);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // Handle error
+                    }
+                });
+        requestQueue.add(stringRequest);
+        requestQueue.start();
+        Log.v("USERInfo", "String request made");
         versionLine.trim();
         String newestVersion = "";
         for (String x : versionLine.split("")) {
@@ -205,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
                 Integer.parseInt(version.split(".")[2]) < Integer.parseInt(newestVersion.split(".")[2]) ||
                         Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
                         Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
-            updateTextView.setText("Click to Update to: V" + newestVersion);
+            updateTextView.setText("Click to Update to: " + newestVersion);
             updateTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
