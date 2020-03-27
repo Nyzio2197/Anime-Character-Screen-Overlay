@@ -181,11 +181,14 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     case MotionEvent.ACTION_MOVE:
                         params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                        // deprecated flip function
+                        /*
                         if (params.x < 0)
                             overlayPowerBtn.setScaleX(-1);
                         else
                             overlayPowerBtn.setScaleX(1);
                         windowManager.updateViewLayout(overlayPowerBtn, params);
+                         */
                         return true;
                 }
                 return false;
