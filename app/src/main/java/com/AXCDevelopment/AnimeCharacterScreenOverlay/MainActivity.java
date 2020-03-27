@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer = new MediaPlayer();
         animeCharacter = ANIME_CHARACTERS[0];
         size = 200;
-        
+
         setUpTextView();
 
         setUpSpinner();
@@ -170,40 +170,52 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpTextView() {
         updateTextView = findViewById(R.id.update);
-        String versionLine = "";
-        try {
-            URL url = new URL("https://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml");
-            // read text returned by server
-            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-            String line;
-            while ((line = in.readLine()) != null) {
-                if (line.contains("version")) {
-                    versionLine = line;
-                    break;
+        updateTextView.setText("V" + version);
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try  {
+                    String versionLine = "";
+                    try {
+                        URL url = new URL("https://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml");
+                        // read text returned by server
+                        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+                        String line;
+                        while ((line = in.readLine()) != null) {
+                            if (line.contains("version")) {
+                                versionLine = line;
+                                break;
+                            }
+                        }
+                        in.close();
+                    }
+                    catch (MalformedURLException e) {
+                        System.out.println("Malformed URL: " + e.getMessage());
+                    }
+                    catch (IOException e) {
+                        System.out.println("I/O Error: " + e.getMessage());
+                    }
+                    versionLine.trim();
+                    String newestVersion = "";
+                    for (String x : versionLine.split("")) {
+                        if (x.matches("[0-9].+")) {
+                            newestVersion += x;
+                        }
+                    }
+                    if ((!version.isEmpty() && !newestVersion.isEmpty()) && (
+                            Integer.parseInt(version.split(".")[2]) < Integer.parseInt(newestVersion.split(".")[2]) ||
+                                    Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
+                                    Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
+                        updateTextView.setText("V" + version + "\nThere's an update!\nDownload it " + getString(R.string.here));
+                        updateTextView.setMovementMethod(LinkMovementMethod.getInstance());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-            in.close();
-        }
-        catch (MalformedURLException e) {
-            System.out.println("Malformed URL: " + e.getMessage());
-        }
-        catch (IOException e) {
-            System.out.println("I/O Error: " + e.getMessage());
-        }
-        versionLine.trim();
-        String newestVersion = "";
-        for (String x : versionLine.split("")) {
-            if (x.matches("[0-9].+")) {
-                newestVersion += x;
-            }
-        }
-        if ((!version.isEmpty() && !newestVersion.isEmpty()) && (
-                Integer.parseInt(version.split(".")[2]) < Integer.parseInt(newestVersion.split(".")[2]) ||
-                Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
-                Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
-            updateTextView.setText("There's an update!\nDownload it " + getString(R.string.here));
-            updateTextView.setMovementMethod(LinkMovementMethod.getInstance());
-        }
+        });
+        thread.start();
+
     }
 
     private void setUpSpinner() {
