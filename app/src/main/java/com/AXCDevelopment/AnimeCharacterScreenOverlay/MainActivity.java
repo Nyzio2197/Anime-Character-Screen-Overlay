@@ -76,16 +76,22 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     private int size;
     private static final AnimeCharacter[] ANIME_CHARACTERS = new AnimeCharacter[]
-            {new AnimeCharacter("Zero Two",
-                        new String[]{"Darling in the Franxx", "Female"},
-                        R.drawable.zerotwo,
-                        R.drawable.zerotwo,
-                        R.raw.darling),
+            {
+                    new AnimeCharacter("Zero Two",
+                            new String[]{"Darling in the Franxx", "Female"},
+                            R.drawable.zerotwo,
+                            R.drawable.zerotwo,
+                            R.raw.darling),
                     new AnimeCharacter("Nezuko",
                             new String[]{"Demon Slayer", "Female"},
                             R.drawable.nezuko,
                             R.drawable.nezuko,
-                            R.raw.nezuko_sound)
+                            R.raw.nezuko_sound),
+                    new AnimeCharacter("Rem",
+                            new String[]{"Re:Zero - Starting Life in Another World", "Female"},
+                            R.drawable.rem,
+                            R.drawable.rem,
+                            R.raw.rem_love)
             };
 
     @Override
@@ -124,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     private void startPowerOverlay(){
         // Starts the button overlay.
+        mediaPlayer = MediaPlayer.create(context, animeCharacter.getAudioLocation());
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         overlayPowerBtn = new ImageView(context);
         overlayPowerBtn.setImageResource(animeCharacter.getImageStatLocation());
@@ -255,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
                 animeCharacter = ANIME_CHARACTERS[position];
                 if (overlayPowerBtn != null) {
                     windowManager.removeView(overlayPowerBtn);
-                    windowManager.addView(overlayPowerBtn, params);
+                    startPowerOverlay();
                 }
                 // Showing selected spinner item
                 Toast.makeText(parent.getContext(), character + " selected", Toast.LENGTH_SHORT).show();
@@ -338,7 +345,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    mediaPlayer = MediaPlayer.create(context, animeCharacter.getAudioLocation());
                     startPowerOverlay();
                 }
                 else {
