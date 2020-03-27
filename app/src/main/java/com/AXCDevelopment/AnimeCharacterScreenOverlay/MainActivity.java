@@ -17,6 +17,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -78,9 +79,7 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer = new MediaPlayer();
         animeCharacter = ANIME_CHARACTERS[0];
         size = 200;
-
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
+        
         setUpTextView();
 
         setUpSpinner();
@@ -203,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
                 Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
                 Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
             updateTextView.setText("There's an update!\nDownload it " + getString(R.string.here));
+            updateTextView.setMovementMethod(LinkMovementMethod.getInstance());
         }
     }
 
