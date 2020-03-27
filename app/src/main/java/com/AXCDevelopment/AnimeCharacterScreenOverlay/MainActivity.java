@@ -184,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
     private void setUpSeekBar() {
         sizeSeekBar = findViewById(R.id.size);
         sizeSeekBar.setMax(500);
+        sizeSeekBar.setPadding(5, 0, 20, 0);
         sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progress;
 

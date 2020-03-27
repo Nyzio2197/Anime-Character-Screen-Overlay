@@ -50,7 +50,7 @@
             android:textSize="20dp"
             android:layout_marginTop="20dp"/>
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -59,8 +59,11 @@
                 android:id="@+id/size"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_gravity="center_horizontal">
+                android:layout_gravity="center_horizontal"
+                app:layout_constraintRight_toLeftOf="@+id/editSize"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
                 
             </SeekBar>
             
@@ -69,11 +72,15 @@
                 android:layout_width="42dp"
                 android:layout_height="wrap_content"
                 android:inputType="number"
-                android:textColor="@android:color/black">
+                android:textColor="@android:color/black"
+                android:background="@null"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
             </EditText>
             
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
         
 
     </LinearLayout>
