@@ -11,6 +11,7 @@ import android.net.InetAddresses;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -36,7 +37,15 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public class MainActivity extends AppCompatActivity {
+
+    public String version;
 
     private Switch onOffSwitch;
     private Spinner selectorSpinner;
@@ -63,10 +72,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        version = getString(R.string.version);
+
         context = this;
         mediaPlayer = new MediaPlayer();
         animeCharacter = ANIME_CHARACTERS[0];
         size = 200;
+
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        setUpTextView();
 
         setUpSpinner();
 
@@ -152,6 +167,43 @@ public class MainActivity extends AppCompatActivity {
         });
 
         windowManager.addView(overlayPowerBtn, params);
+    }
+
+    private void setUpTextView() {
+        updateTextView = findViewById(R.id.update);
+        String versionLine = "";
+        try {
+            URL url = new URL("https://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml");
+            // read text returned by server
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+            String line;
+            while ((line = in.readLine()) != null) {
+                if (line.contains("version")) {
+                    versionLine = line;
+                    break;
+                }
+            }
+            in.close();
+        }
+        catch (MalformedURLException e) {
+            System.out.println("Malformed URL: " + e.getMessage());
+        }
+        catch (IOException e) {
+            System.out.println("I/O Error: " + e.getMessage());
+        }
+        versionLine.trim();
+        String newestVersion = "";
+        for (String x : versionLine.split("")) {
+            if (x.matches("[0-9].+")) {
+                newestVersion += x;
+            }
+        }
+        if ((!version.isEmpty() && !newestVersion.isEmpty()) && (
+                Integer.parseInt(version.split(".")[2]) < Integer.parseInt(newestVersion.split(".")[2]) ||
+                Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
+                Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
+            updateTextView.setText("There's an update!\nDownload it " + getString(R.string.here));
+        }
     }
 
     private void setUpSpinner() {
