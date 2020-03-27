@@ -187,8 +187,8 @@ public class MainActivity extends AppCompatActivity {
                             overlayPowerBtn.setScaleX(-1);
                         else
                             overlayPowerBtn.setScaleX(1);
-                        windowManager.updateViewLayout(overlayPowerBtn, params);
                          */
+                        windowManager.updateViewLayout(overlayPowerBtn, params);
                         return true;
                 }
                 return false;
