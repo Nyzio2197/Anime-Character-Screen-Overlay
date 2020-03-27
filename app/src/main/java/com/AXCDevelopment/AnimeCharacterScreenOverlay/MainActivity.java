@@ -9,6 +9,7 @@ import android.graphics.PixelFormat;
 import android.media.MediaPlayer;
 import android.net.InetAddresses;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -19,6 +20,7 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -171,50 +173,47 @@ public class MainActivity extends AppCompatActivity {
     private void setUpTextView() {
         updateTextView = findViewById(R.id.update);
         updateTextView.setText("V" + version);
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try  {
-                    String versionLine = "";
-                    try {
-                        URL url = new URL("https://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml");
-                        // read text returned by server
-                        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-                        String line;
-                        while ((line = in.readLine()) != null) {
-                            if (line.contains("version")) {
-                                versionLine = line;
-                                break;
-                            }
-                        }
-                        in.close();
-                    }
-                    catch (MalformedURLException e) {
-                        System.out.println("Malformed URL: " + e.getMessage());
-                    }
-                    catch (IOException e) {
-                        System.out.println("I/O Error: " + e.getMessage());
-                    }
-                    versionLine.trim();
-                    String newestVersion = "";
-                    for (String x : versionLine.split("")) {
-                        if (x.matches("[0-9].+")) {
-                            newestVersion += x;
-                        }
-                    }
-                    if ((!version.isEmpty() && !newestVersion.isEmpty()) && (
-                            Integer.parseInt(version.split(".")[2]) < Integer.parseInt(newestVersion.split(".")[2]) ||
-                                    Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
-                                    Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
-                        updateTextView.setText("V" + version + "\nThere's an update!\nDownload it " + getString(R.string.here));
-                        updateTextView.setMovementMethod(LinkMovementMethod.getInstance());
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+        String versionLine = "";
+        try {
+            URL url = new URL("https://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml");
+            // read text returned by server
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+            String line;
+            while ((line = in.readLine()) != null) {
+                if (line.contains("version")) {
+                    versionLine = line;
+                    break;
                 }
             }
-        });
-        thread.start();
+            in.close();
+        }
+        catch (MalformedURLException e) {
+            Log.v("Malformed URL: ", e.getMessage());
+        }
+        catch (IOException e) {
+            Log.v("I/O Error: ", e.getMessage());
+        }
+        versionLine.trim();
+        String newestVersion = "";
+        for (String x : versionLine.split("")) {
+            if (x.matches("[0-9].+")) {
+                newestVersion += x;
+            }
+        }
+        Log.v("newestVersion", newestVersion);
+        if ((!version.isEmpty() && !newestVersion.isEmpty()) && (
+                Integer.parseInt(version.split(".")[2]) < Integer.parseInt(newestVersion.split(".")[2]) ||
+                        Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
+                        Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
+            updateTextView.setText("Click to Update to: V" + newestVersion);
+            updateTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/alandaboi/Anime-Character-Screen-Overlay/raw/master/app/release/Anime%20Overlay.apk"));
+                    startActivity(browserIntent);
+                }
+            });
+        }
 
     }
 
@@ -329,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
             windowManager.removeView(overlayPowerBtn);
     }
 
-    class InputFilterMinMax implements InputFilter {
+    private class InputFilterMinMax implements InputFilter {
         private int min, max;
 
         public InputFilterMinMax(int min, int max) {

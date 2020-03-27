@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">Anime Overlay</string>
-    <string name="version">0.2.2</string>
-    <string name="here"><a href="https://github.com/alandaboi/Anime-Character-Screen-Overlay/raw/master/app/release/Anime%20Overlay.apk">here</a></string>
+    <string name="version">V0.2.3</string>
 </resources>
