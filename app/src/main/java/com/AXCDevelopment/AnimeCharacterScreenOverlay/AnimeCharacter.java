@@ -4,6 +4,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import androidx.annotation.NonNull;
+
 public class AnimeCharacter{
 
     // name of the character
@@ -53,23 +55,17 @@ public class AnimeCharacter{
         return imageStatLocation;
     }
 
-    public int getImageMoveLocation() {
-        return imageMoveLocation;
-    }
-
-    public Bitmap getImageMove() {
-        return BitmapFactory.decodeResource(Resources.getSystem(), imageMoveLocation);
-    }
-
-    public void setImageMoveLocation(int imageMoveLocation) {
-        this.imageMoveLocation = imageMoveLocation;
-    }
-
     public int getAudioLocation() {
         return audioLocation;
     }
 
     public void setAudioLocation(int audioLocation) {
         this.audioLocation = audioLocation;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return getName();
     }
 }

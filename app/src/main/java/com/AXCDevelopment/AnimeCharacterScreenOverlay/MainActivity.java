@@ -7,29 +7,49 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.media.MediaPlayer;
+import android.net.InetAddresses;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.Spanned;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.Filter;
 import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     private Switch onOffSwitch;
+    private Spinner selectorSpinner;
+    private SeekBar sizeSeekBar;
+    private TextView updateTextView;
+    private EditText sizeEditText;
     private AnimeCharacter animeCharacter;
     private ImageView overlayPowerBtn;
     private Context context;
     private WindowManager windowManager;
     private WindowManager.LayoutParams params;
     private MediaPlayer mediaPlayer;
+    private int size;
     private static final AnimeCharacter[] ANIME_CHARACTERS = new AnimeCharacter[]
             {new AnimeCharacter("Zero Two",
                     new String[]{"Darling in the Franxx", "Female"},
@@ -44,9 +64,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         context = this;
-        windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         mediaPlayer = new MediaPlayer();
         animeCharacter = ANIME_CHARACTERS[0];
+        size = 200;
+
+        setUpSpinner();
+
+        setUpSeekBar();
+
+        setUpEditText();
 
         // Check for overlay permission. If not enabled, request for it. If enabled, show the overlay
         if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(context)) {
@@ -57,18 +83,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.fromParts("package", getPackageName(), null)));
         }
 
-        onOffSwitch = findViewById(R.id.start);
-        onOffSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    startPowerOverlay();
-                else
-                    if (overlayPowerBtn != null)
-                        windowManager.removeView(overlayPowerBtn);
-            }
-        });
-        onOffSwitch.setChecked(true);
+        setUpSwitch();
 
     }
 
@@ -76,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private void startPowerOverlay(){
         // Starts the button overlay.
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        overlayPowerBtn = new ImageView(this);
+        overlayPowerBtn = new ImageView(context);
         overlayPowerBtn.setImageResource(animeCharacter.getImageStatLocation());
 
         int LAYOUT_FLAG;
@@ -95,23 +110,151 @@ public class MainActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
 
-        params.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+        params.gravity = Gravity.BOTTOM;
         params.x = 0;
-        params.y = 0;
-        params.height = 200;
-        params.width = 200;
+        params.height = size;
+        params.width = size;
 
-        overlayPowerBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!mediaPlayer.isPlaying()) {
-                    mediaPlayer = MediaPlayer.create(context, animeCharacter.getAudioLocation());
-                    mediaPlayer.start();
+        overlayPowerBtn.setOnTouchListener(new View.OnTouchListener() {
+            private int initialX;
+            private float initialTouchX;
+            private long latestPressTime = 0;
+
+            @Override public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        // Save current x/y
+                        initialX = params.x;
+                        initialTouchX = event.getRawX();
+                        // Check for double clicks.
+                        if (latestPressTime == 0 || latestPressTime + 500 < System.currentTimeMillis()) {
+                            latestPressTime = System.currentTimeMillis();
+                        } else {
+                            // Doubleclicked. Do any action you'd like
+                        }
+                        if (!mediaPlayer.isPlaying()) {
+                            mediaPlayer.start();
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                        if (params.x < 0)
+                            overlayPowerBtn.setScaleX(-1);
+                        else
+                            overlayPowerBtn.setScaleX(1);
+                        windowManager.updateViewLayout(overlayPowerBtn, params);
+                        return true;
                 }
+                return false;
             }
         });
 
         windowManager.addView(overlayPowerBtn, params);
+    }
+
+    private void setUpSpinner() {
+        selectorSpinner = findViewById(R.id.select);
+        selectorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // On selecting a spinner item
+                String character = parent.getItemAtPosition(position).toString();
+                animeCharacter = ANIME_CHARACTERS[position];
+                if (overlayPowerBtn != null) {
+                    windowManager.removeView(overlayPowerBtn);
+                    windowManager.addView(overlayPowerBtn, params);
+                }
+                // Showing selected spinner item
+                Toast.makeText(parent.getContext(), character + " selected", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        ArrayAdapter<AnimeCharacter> dataAdapter =
+                new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, ANIME_CHARACTERS);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        selectorSpinner.setAdapter(dataAdapter);
+    }
+
+    private void setUpSeekBar() {
+        sizeSeekBar = findViewById(R.id.size);
+        sizeSeekBar.setMax(500);
+        sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                this.progress = progress;
+                size = progress;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (sizeEditText != null) {
+                    sizeEditText.setText("" + progress);
+                }
+                if (overlayPowerBtn != null) {
+                    windowManager.removeView(overlayPowerBtn);
+                    params.height = progress;
+                    params.width = progress;
+                    windowManager.addView(overlayPowerBtn, params);
+                }
+            }
+        });
+        sizeSeekBar.setProgress(200);
+    }
+
+    private void setUpEditText() {
+        sizeEditText = findViewById(R.id.editSize);
+        sizeEditText.setText("" + sizeSeekBar.getProgress());
+        sizeEditText.setFilters(new InputFilter[]{new InputFilterMinMax(0, 500)});
+        sizeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    sizeSeekBar.setProgress(Integer.parseInt(sizeEditText.getText().toString()));
+                    if (overlayPowerBtn != null) {
+                        windowManager.removeView(overlayPowerBtn);
+                        params.height = sizeSeekBar.getProgress();
+                        params.width = sizeSeekBar.getProgress();
+                        windowManager.addView(overlayPowerBtn, params);
+                    }
+                    InputMethodManager imm = (InputMethodManager)v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    sizeEditText.clearFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+    }
+
+    private void setUpSwitch() {
+        onOffSwitch = findViewById(R.id.start);
+        onOffSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mediaPlayer = MediaPlayer.create(context, animeCharacter.getAudioLocation());
+                    startPowerOverlay();
+                }
+                else {
+                    if (overlayPowerBtn != null)
+                        windowManager.removeView(overlayPowerBtn);
+                }
+            }
+        });
     }
 
     @Override
@@ -120,4 +263,33 @@ public class MainActivity extends AppCompatActivity {
         if (overlayPowerBtn != null)
             windowManager.removeView(overlayPowerBtn);
     }
+
+    class InputFilterMinMax implements InputFilter {
+        private int min, max;
+
+        public InputFilterMinMax(int min, int max) {
+            this.min = min;
+            this.max = max;
+        }
+
+        public InputFilterMinMax(String min, String max) {
+            this.min = Integer.parseInt(min);
+            this.max = Integer.parseInt(max);
+        }
+
+        @Override
+        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+            try {
+                int input = Integer.parseInt(dest.toString() + source.toString());
+                if (isInRange(min, max, input))
+                    return null;
+            } catch (NumberFormatException nfe) { }
+            return "";
+        }
+
+        private boolean isInRange(int a, int b, int c) {
+            return b > a ? c >= a && c <= b : c >= b && c <= a;
+        }
+    }
+
 }
