@@ -57,6 +57,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
@@ -75,7 +76,8 @@ public class MainActivity extends AppCompatActivity {
     private WindowManager.LayoutParams params;
     private MediaPlayer mediaPlayer;
     private int size;
-    private static final AnimeCharacter[] ANIME_CHARACTERS = new AnimeCharacter[]
+
+    private static ArrayList<AnimeCharacter> animeCharacters = new ArrayList<>();
             {
                     new AnimeCharacter("Zero Two",
                             new String[]{"Darling in the Franxx", "Female"},
@@ -103,10 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
         mediaPlayer = new MediaPlayer();
-        animeCharacter = ANIME_CHARACTERS[0];
         size = 200;
-
-        setUpTextView();
 
         setUpSpinner();
 
@@ -198,63 +197,6 @@ public class MainActivity extends AppCompatActivity {
         windowManager.addView(overlayPowerBtn, params);
     }
 
-    String versionLine;
-
-    private void setUpTextView() {
-        updateTextView = findViewById(R.id.update);
-        versionLine = "";
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String url ="http://raw.githubusercontent.com/alandaboi/Anime-Character-Screen-Overlay/master/app/src/main/res/values/strings.xml";
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // read text returned by server
-                        Scanner in = new Scanner(response);
-                        String line;
-                        while ((line = in.nextLine()) != null) {
-                            if (line.contains("version")) {
-                                versionLine = line;
-                                break;
-                            }
-                        }
-                        in.close();
-                        Log.v("USERInfo", versionLine);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // Handle error
-                    }
-                });
-        requestQueue.add(stringRequest);
-        requestQueue.start();
-        Log.v("USERInfo", "String request made");
-        versionLine.trim();
-        String newestVersion = "";
-        for (String x : versionLine.split("")) {
-            if (x.matches("[0-9].+")) {
-                newestVersion += x;
-            }
-        }
-        Log.v("newestVersion", newestVersion);
-        if ((!version.isEmpty() && !newestVersion.isEmpty()) && (
-                Integer.parseInt(version.split(".")[2]) < Integer.parseInt(newestVersion.split(".")[2]) ||
-                        Integer.parseInt(version.split(".")[1]) < Integer.parseInt(newestVersion.split(".")[1]) ||
-                        Integer.parseInt(version.split(".")[0]) < Integer.parseInt(newestVersion.split(".")[0]))) {
-            updateTextView.setText("Click to Update to: " + newestVersion);
-            updateTextView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/alandaboi/Anime-Character-Screen-Overlay/raw/master/app/release/Anime%20Overlay.apk"));
-                    startActivity(browserIntent);
-                }
-            });
-        }
-
-    }
-
     private void setUpSpinner() {
         selectorSpinner = findViewById(R.id.select);
         selectorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -262,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 // On selecting a spinner item
                 String character = parent.getItemAtPosition(position).toString();
-                animeCharacter = ANIME_CHARACTERS[position];
+                animeCharacter = animeCharacters.get(position);
                 if (overlayPowerBtn != null) {
                     windowManager.removeView(overlayPowerBtn);
                     startPowerOverlay();
